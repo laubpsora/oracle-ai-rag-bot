@@ -19,10 +19,10 @@ def reset_conversation():
     st.session_state.feedback_rendered = False
     st.session_state.feedback_key = 0
 
-st.title("Developing an AI bot powered by RAG and Oracle Database")
+st.title("CSS Documentation AI bot")
 
 # Added reset button
-st.button("Clear Chat History", on_click=reset_conversation)
+st.button("Clear chat history", on_click=reset_conversation)
 
 # Initialize chat history
 if "messages" not in st.session_state:

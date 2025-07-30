@@ -62,7 +62,7 @@ from config_rag import (
 
 # private configs
 CONFIG_PROFILE = "DEFAULT"
-COMPARTMENT_OCID = "ocid1.compartment.oc1..yourcompartment"
+COMPARTMENT_OCID = "ocid1.compartment.oc1..aaaaaaaa27jgklenni2njiblzxy447a3b5egxjktp63xgcwi4okrabybbfma"
 oci_config = oci.config.from_file("~/.oci/config", CONFIG_PROFILE)
 COHERE_API_KEY = oci_config['key_file']
 #

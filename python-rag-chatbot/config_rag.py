@@ -64,4 +64,4 @@ TEMPERATURE = 0
 # OCI GenAI configs
 #
 TIMEOUT = 30
-ENDPOINT = "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com"
+ENDPOINT = "https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com"

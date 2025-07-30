@@ -8,15 +8,13 @@ from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms.base import LLM
 
 # import to use OCI GenAI Python API
-from oci.generative_ai import GenerativeAiClient
-import oci.generative_ai.models
-from oci.generative_ai_inference.models import GenerateTextDetails, OnDemandServingMode
+from oci.generative_ai_inference import GenerativeAiInferenceClient
+from oci.generative_ai_inference.models import ChatDetails, CohereChatRequest, OnDemandServingMode
 from oci.retry import NoneRetryStrategy
-
 
 class OCIGenAILLM(LLM):
     # added by LS
-    model_id: str = "cohere.command"
+    model_id: str = "ocid1.generativeaimodel.oc1.eu-frankfurt-1.amaaaaaask7dceyabdu6rjjmg75pixtecqvjen4x4st4mhs2a4zzfx5cgkmq"
     debug: bool = False
 
     max_tokens: int = 300
@@ -28,9 +26,10 @@ class OCIGenAILLM(LLM):
     service_endpoint: Optional[str] = None
     compartment_id: Optional[str] = None
     timeout: Optional[int] = 10
+    signer: Optional[Any] = None
 
     # moved here by LS
-    generative_ai_client: GenerativeAiClient = None
+    generative_ai_inference_client: GenerativeAiInferenceClient = None
 
     """OCI Generative AI LLM model.
 
@@ -59,8 +58,9 @@ class OCIGenAILLM(LLM):
         super().__init__(**kwargs)
 
         # here we create and store the GenAIClient
-        self.generative_ai_client = GenerativeAiClient(
+        self.generative_ai_inference_client = GenerativeAiInferenceClient(
             config=self.config,
+            signer=self.signer,
             service_endpoint=self.service_endpoint,
             retry_strategy=NoneRetryStrategy(),
             timeout=(self.timeout, 240),
@@ -80,18 +80,20 @@ class OCIGenAILLM(LLM):
         if stop is not None:
             raise ValueError("stop kwargs are not permitted.")
 
-        # calling OCI GenAI
         tStart = time()
 
-        generate_text_detail = GenerateTextDetails()
-        generate_text_detail.prompts = [prompt]
-        generate_text_detail.serving_mode = OnDemandServingMode(model_id=self.model_id)
-        generate_text_detail.compartment_id = self.compartment_id
-        generate_text_detail.max_tokens = self.max_tokens
-        generate_text_detail.temperature = self.temperature
-        generate_text_detail.frequency_penalty = self.frequency_penalty
-        generate_text_detail.top_p = self.top_p
-        generate_text_detail.top_k = self.top_k
+        chat_detail = ChatDetails()
+        chat_request = CohereChatRequest()
+        chat_request.message = prompt
+        chat_request.max_tokens = self.max_tokens
+        chat_request.temperature = self.temperature
+        chat_request.frequency_penalty = self.frequency_penalty
+        chat_request.top_p = self.top_p
+        chat_request.top_k = self.top_k
+
+        chat_detail.serving_mode = OnDemandServingMode(model_id=self.model_id)
+        chat_detail.chat_request = chat_request
+        chat_detail.compartment_id = self.compartment_id
 
         if self.debug:
             print()
@@ -99,11 +101,8 @@ class OCIGenAILLM(LLM):
             print(prompt)
             print()
 
-        print("Calling OCI genai...")
-        generate_text_response = self.generative_ai_client.generate_text(
-            generate_text_detail
-        )
-
+        print("Calling OCI genai (chat)...")
+        chat_response = self.generative_ai_inference_client.chat(chat_detail)
 
         tEla = time() - tStart
 
@@ -111,7 +110,13 @@ class OCIGenAILLM(LLM):
             print(f"Elapsed time: {round(tEla, 1)} sec...")
             print()
 
-        return generate_text_response.data.generated_texts[0][0].text
+        # TODO: Try to extract the text from the response
+        try:
+            return chat_response.data.chat_response.text
+        except Exception:
+            # fallback: print all vars for debugging
+            print(vars(chat_response))
+            raise
 
     @property
     def _identifying_params(self) -> Mapping[str, Any]:

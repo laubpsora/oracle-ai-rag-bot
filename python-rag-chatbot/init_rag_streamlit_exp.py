@@ -4,6 +4,8 @@
 import oracledb
 import streamlit as st
 
+import oci
+
 # for pdf post processing
 import re
 
@@ -21,7 +23,6 @@ from langchain.vectorstores import FAISS
 
 from langchain.schema.runnable import RunnablePassthrough
 
-# removed OpenAI, using Cohere embeddings
 from langchain.embeddings import CohereEmbeddings
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings import CacheBackedEmbeddings
@@ -29,23 +30,23 @@ from langchain.embeddings import CacheBackedEmbeddings
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CohereRerank
 
-from langchain import hub
 from langchain.prompts import ChatPromptTemplate
 
 from langchain.llms import Cohere
 
-import oci
-from langchain_community.llms.oci_generative_ai import OCIGenAI
+
+"""from langchain_community.llms.oci_generative_ai import OCIGenAI """
 from langchain_community.vectorstores import OracleVS
 from langchain_community.vectorstores.utils import DistanceStrategy
 
+from langchain_community.document_loaders import PyPDFLoader
+
 # oci_llm is in a local file
-# from oci_llm import OCIGenAILLM
+from oci_llm import OCIGenAILLM
 
 
 # config for the RAG
 from config_rag import (
-    BOOK_LIST,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
     VECTOR_STORE_NAME,
@@ -57,33 +58,32 @@ from config_rag import (
     ADD_RERANKER,
     TEMPERATURE,
     EMBED_HF_MODEL_NAME,
-    TIMEOUT,
     LLM_TYPE,
-    DEBUG
+    DEBUG,
+    TIMEOUT,
 )
 
 # private configs
 CONFIG_PROFILE = "DEFAULT"
-COMPARTMENT_OCID = "ocid1.compartment.oc1..yourcompartment"
+COMPARTMENT_OCID = "ocid1.compartment.oc1..aaaaaaaa27jgklenni2njiblzxy447a3b5egxjktp63xgcwi4okrabybbfma"
 oci_config = oci.config.from_file("~/.oci/config", CONFIG_PROFILE)
 COHERE_API_KEY = oci_config['security_token_file']
-
 
 #
 # load_oci_config(): load the OCI security config
 #
-# def load_oci_config():
-#     # read OCI config to connect to OCI with API key
-#     oci_config = oci.config.from_file("~/.oci/config", CONFIG_PROFILE)
-#
-#     # check the config to access to api keys
-#     if DEBUG:
-#         print()
-#         print("OCI Config:")
-#         print(oci_config)
-#         print()
-#
-#     return oci_config
+def load_oci_config():
+    # read OCI config to connect to OCI with API key
+    oci_config = oci.config.from_file("~/.oci/config", CONFIG_PROFILE)
+
+    # check the config to access to api keys
+    if DEBUG:
+        print()
+        print("OCI Config:")
+        print(oci_config)
+        print()
+        
+    return oci_config
 
 
 #
@@ -102,7 +102,6 @@ def post_process(splits):
 
 #
 # load all pages from pdf books
-#
 #
 def load_all_pages(book_list):
     all_pages = []
@@ -246,18 +245,22 @@ def make_security_token_signer(oci_config):
 #
 def build_llm(llm_type):
     print(f"Using {llm_type} llm...")
-    signer = make_security_token_signer(oci_config=oci_config)
     if llm_type == "OCI":
 
-        print("Using OCI experimental integration with LangChain...")
+        oci_config = load_oci_config()
+        oci_signer = make_security_token_signer(oci_config=oci_config)
 
-        llm = OCIGenAI(
-            model_id="cohere.command",
-            service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
-            compartment_id="ocid1.compartment.oc1..yourCompartment",
-            model_kwargs={"max_tokens": 200},
-            auth_type='SECURITY_TOKEN',
+        llm = OCIGenAILLM(
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
+            config=oci_config,
+            signer=oci_signer,
+            compartment_id=COMPARTMENT_OCID,
+            service_endpoint=ENDPOINT,
+            debug=DEBUG,
+            timeout=TIMEOUT,
         )
+        
     elif llm_type == "COHERE":
         llm = Cohere(
             model="command",  # using large model and not nightly

@@ -115,7 +115,7 @@ mention==                                  0.1
 mistune==                                  3.0.2
 mmh3==                                     4.1.0
 modules==                                  1.0.0
-monotonic==                                1.6
+monotonic==                                1.6y
 mpmath==                                   1.3.0
 multidict==                                6.0.4
 mypy-extensions==                          1.0.0
@@ -125,7 +125,7 @@ nbformat==                                 5.9.2
 nest-asyncio==                             1.5.8
 networkx==                                 3.1
 notebook_shim==                            0.2.3
-numpy==                                    1.26.1
+numpy==                                    1.26.4
 oauthlib==                                 3.2.2
 oci==                                      2.126.4
 onnxruntime==                              1.18.0
@@ -158,7 +158,7 @@ pip==                                      24.1.1
 platformdirs==                             3.11.0
 posthog==                                  3.0.2
 prometheus-client==                        0.17.1
-prompt-toolkit==                           3.0.39
+#prompt-toolkit==                           3.0.39
 protobuf==                                 4.24.4
 psutil==                                   5.9.6
 ptyprocess==                               0.7.0

@@ -49,7 +49,7 @@ from config_rag import (
 
 # private configs
 CONFIG_PROFILE = "DEFAULT"
-COMPARTMENT_OCID = "ocid1.compartment.yourcomparmentid"
+COMPARTMENT_OCID = "ocid1.compartment.oc1..aaaaaaaa27jgklenni2njiblzxy447a3b5egxjktp63xgcwi4okrabybbfma"
 oci_config = oci.config.from_file("~/.oci/config", CONFIG_PROFILE)
 COHERE_API_KEY = oci_config['security_token_file']
 DEBUG = True
@@ -154,8 +154,8 @@ def initialize_rag_chain():
     if LLM_TYPE == "OCI":
 
         llm = OCIGenAI(
-            service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
-            compartment_id="ocid1.compartment.oc1..yourcompartment",
+            service_endpoint="https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com",
+            compartment_id=COMPARTMENT_OCID,
             model_kwargs={"max_tokens": 1000},
             auth_type='SECURITY_TOKEN',
         )
