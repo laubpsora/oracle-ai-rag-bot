@@ -283,7 +283,7 @@ def initialize_rag_chain():
 
     # 1. Load the csv and format as documents
     detailed = pd.read_csv('pdfFiles/preprocessed.csv')
-    todrop = ['text_processed', 'text_no_stopwords', 'text', 'text_lemmatized', 'status', 'scraped_timestamp']
+    todrop = ['text_processed', 'text_no_stopwords', 'text_stemmed', 'text', 'status', 'scraped_timestamp']
     detailed.drop(columns=todrop, axis=1, inplace=True)
     detailed = detailed.dropna().astype(str)
 
