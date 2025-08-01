@@ -291,8 +291,8 @@ def initialize_rag_chain():
     # Convert each row into a Document object
     documents = [
         Document(
-            page_content=row['text'],  # this will be chunked later
-            metadata={k: v for k, v in row.items() if k != 'text'}
+            page_content=row['text_stemmed'],  # this will be chunked later
+            metadata={k: v for k, v in row.items() if k != 'text_stemmed'}
         )
         for _, row in detailed.iterrows()
     ]
