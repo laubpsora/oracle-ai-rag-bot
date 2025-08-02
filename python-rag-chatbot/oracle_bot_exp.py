@@ -74,5 +74,3 @@ if question := st.chat_input("Hello, how can I help you?"):
     except Exception as e:
         st.error(f"An error occurred: {e}")
         traceback.print_exc()
-        hfdhfi
-dmndbk
