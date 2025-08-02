@@ -14,7 +14,7 @@ from oci.retry import NoneRetryStrategy
 
 class OCIGenAILLM(LLM):
     # added by LS
-    model_id: str = "ocid1.generativeaimodel.oc1.eu-frankfurt-1.amaaaaaask7dceyabdu6rjjmg75pixtecqvjen4x4st4mhs2a4zzfx5cgkmq"
+    model_id: str = "ocid1.generativeaimodel.oc1.eu-frankfurt-1.amaaaaaask7dceyaessaqnexr66avnxjksoibejm2yk2w3rkf7ohicrnx6eq"
     debug: bool = False
 
     max_tokens: int = 300

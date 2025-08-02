@@ -63,7 +63,9 @@ from config_rag import (
     TIMEOUT,
 )
 
+#
 # private configs
+#
 CONFIG_PROFILE = "DEFAULT"
 COMPARTMENT_OCID = "ocid1.compartment.oc1..aaaaaaaa27jgklenni2njiblzxy447a3b5egxjktp63xgcwi4okrabybbfma"
 oci_config = oci.config.from_file("~/.oci/config", CONFIG_PROFILE)
@@ -282,6 +284,7 @@ def initialize_rag_chain():
     # Initialize RAG
 
     # 1. Load the csv and format as documents
+    # TODO: Use text_lemmatized instead of normal text
     detailed = pd.read_csv('pdfFiles/preprocessed.csv')
     todrop = ['text_processed', 'text_no_stopwords', 'text_stemmed', 'text_lemmatized', 'status', 'scraped_timestamp']
     detailed.drop(columns=todrop, axis=1, inplace=True)
@@ -299,7 +302,6 @@ def initialize_rag_chain():
 
     # 2. Split pages in chunks
     document_splits = split_in_chunks(documents)
-    document_splits
 
     # 3. Load embeddings model
     embedder = create_cached_embedder()
