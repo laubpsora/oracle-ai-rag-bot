@@ -299,7 +299,6 @@ def initialize_rag_chain():
 
     # 2. Split pages in chunks
     document_splits = split_in_chunks(documents)
-    document_splits
 
     # 3. Load embeddings model
     embedder = create_cached_embedder()
