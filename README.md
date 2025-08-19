@@ -1,34 +1,57 @@
-# oracle-ai-for-sustainable-dev
+# Integrating Oracle Database 23ai RAG and OCI Generative AI with LangChain
 
-[![License: UPL](https://img.shields.io/badge/license-UPL-green)](https://img.shields.io/badge/license-UPL-green) [![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=oracle-devrel_oracle-ai-for-sustainable-dev)](https://sonarcloud.io/dashboard?id=oracle-devrel_oracle-ai-for-sustainable-dev)
+[**Oracle Database 23ai**](https://www.oracle.com/database/free-1/)
 
-## This is the source repos for the 
-## "Develop with Oracle AI and Database Services: Gen, Vision, Speech, Language, and OML" workshop
+[**OCI GenAI**](https://www.oracle.com/artificial-intelligence/generative-ai/large-language-models/)
 
-## Introduction
-See workshop at https://apexapps.oracle.com/pls/apex/r/dbpm/livelabs/view-workshop?wid=3874
+[**LangChain**](https://www.langchain.com/) 
+ 
 
-## Getting Started
-MISSING
+## TODO instructions
 
-### Prerequisites
-MISSING
+- setup ~/.oci/config
+- oci session authenticate and make sure authentication is successful
+- use region where the OCI gen AI is available. Currently we are using chicago region. 
+- run pip install -r requirements.txt
+- check you config_rag.py file and make sure your api endpoint belong to chicago region and db which you want to use like chroma db or oracle db
+- set your compartment_id ocid inside the file i.e. init_rag_streamlit_exp.py and init_rag.py file
+- Changing the db type you need to modify at config file and you see the logic inside create_vector_store
+- podman run -d --name 23ai -p 1521:1521 -e ORACLE_PWD=<password> -v oracle-volume:/Users/pparkins/oradata container-registry.oracle.com/database/free:latest
+- create/config vector tablespace and user
+- add oracle database info for use in init_rag_streamlit.py / init_rag_streamlit_exp.py
+- run ./run_oracle_bot_exp.sh
 
-## Notes/Issues
-Spring Boot 3.0 requires Java 17 as a minimum version.
+
+## Documentation
+The development of the proposed integration is based on the example, from LangChain, provided [here](https://python.langchain.com/docs/modules/model_io/models/llms/custom_llm)
+
+## Features
+* How-to build a complete, end-2-end RAG solution using LangChain and Oracle GenAI Service.
+* How-to load multiple pdf
+* How-to split pdf pages in smaller chuncks
+* How-to do semantic search using Embeddings
+* How-to use Cohere Embeddings
+* How-to use HF Embeddings
+* How-to setup a Retriever using Embeddings
+* How-to add Cohere reranker to the chain
+* How to integrate OCI GenAI Service with LangChain
+* How to define the LangChain
+* How to use the Oracle vector Db capabilities
+* How to use in-memory database capability
+
+## Oracle BOT
+Using the script [run_oracle_bot_exp.sh](run_oracle_bot_exp.sh) you can launch a simple ChatBot that showcase Oracle GenAI service. The demo is based on docs from Oracle Database pdf documentation.
+
+You need to put in the local directory:
+* Trobleshooting.pdf
+* globally-distributed-autonomous-database.pdf
+* Oracle True cache.pdf
+* oracle-database-23c.pdf
+* oracle-globally-distributed-database-guide.pdf
+* sharding-adg-addshard-cookbook-3610618.pdf
+
+You can add more pdf. Edit [config_rag.py](config_rag.py)
 
 
-## URLs
-https://apexapps.oracle.com/pls/apex/r/dbpm/livelabs/view-workshop?wid=3874
 
-## Contributing
-This project is open source.  Please submit your contributions by forking this repository and submitting a pull request!  Oracle appreciates any contributions that are made by the open source community.
 
-## License
-Copyright (c) 2024 Oracle and/or its affiliates.
-
-Licensed under the Universal Permissive License (UPL), Version 1.0.
-
-See [LICENSE](LICENSE) for more details.
-
-ORACLE AND ITS AFFILIATES DO NOT PROVIDE ANY WARRANTY WHATSOEVER, EXPRESS OR IMPLIED, FOR ANY SOFTWARE, MATERIAL OR CONTENT OF ANY KIND CONTAINED OR PRODUCED WITHIN THIS REPOSITORY, AND IN PARTICULAR SPECIFICALLY DISCLAIM ANY AND ALL IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.  FURTHERMORE, ORACLE AND ITS AFFILIATES DO NOT REPRESENT THAT ANY CUSTOMARY SECURITY REVIEW HAS BEEN PERFORMED WITH RESPECT TO ANY SOFTWARE, MATERIAL OR CONTENT CONTAINED OR PRODUCED WITHIN THIS REPOSITORY. IN ADDITION, AND WITHOUT LIMITING THE FOREGOING, THIRD PARTIES MAY HAVE POSTED SOFTWARE, MATERIAL OR CONTENT TO THIS REPOSITORY WITHOUT ANY REVIEW. USE AT YOUR OWN RISK. 
