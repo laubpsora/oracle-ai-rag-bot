@@ -1,8 +1,0 @@
-langchain
-langchain-community
-oracledb
-streamlit
-streamlit_feedback
-oci
-chromadb
-sentence_transformers

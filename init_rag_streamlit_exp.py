@@ -67,7 +67,7 @@ from config_rag import (
 # private configs
 #
 CONFIG_PROFILE = "DEFAULT"
-COMPARTMENT_OCID = "ocid1.compartment.oc1..aaaaaaaa27jgklenni2njiblzxy447a3b5egxjktp63xgcwi4okrabybbfma"
+COMPARTMENT_OCID = "ocid1.compartment.oc1..aaaaaaaantdtvlr6hrh45u5di4o3wntcmnpcuocc5iyweao4tkedry57flga"
 oci_config = oci.config.from_file("~/.oci/config", CONFIG_PROFILE)
 COHERE_API_KEY = oci_config['security_token_file']
 
@@ -284,7 +284,6 @@ def initialize_rag_chain():
     # Initialize RAG
 
     # 1. Load the csv and format as documents
-    # TODO: Use text_lemmatized instead of normal text
     detailed = pd.read_csv('pdfFiles/preprocessed.csv')
     todrop = ['text_processed', 'text_no_stopwords', 'text_stemmed', 'text_lemmatized', 'status', 'scraped_timestamp']
     detailed.drop(columns=todrop, axis=1, inplace=True)
