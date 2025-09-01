@@ -33,9 +33,9 @@ This project implements a Retrieval-Augmented Generation (RAG) based chatbot des
   ```
   oracle-ads
   oci
+  oci[adk]
   nltk
   streamlit
-  openai (or another compatible LLM library)
   ```
 
 ### Installation
