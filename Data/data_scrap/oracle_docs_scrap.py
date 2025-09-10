@@ -33,14 +33,20 @@ class RecursiveOracleDocsScraper:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
-        
-        # Track visited URLs and their depth
+
         self.visited_urls = set()
         self.url_depth = {}
         self.scraped_data = []
         self.failed_urls = []
         
-        # Define allowed domains for Oracle docs
+        self.output_dir = os.path.join(
+            os.path.dirname(__file__),  
+            '..',
+            'scraped_data'              
+        )
+        self.output_dir = os.path.abspath(self.output_dir)
+        os.makedirs(self.output_dir, exist_ok=True)
+        
         self.allowed_domains = {
             'docs.oracle.com',
             'www.oracle.com'
@@ -55,7 +61,7 @@ class RecursiveOracleDocsScraper:
             r'/generative-ai/',
             r'/cloud-infrastructure/'
         ]
-        
+
     def is_valid_oracle_url(self, url):
         """Check if URL is a valid Oracle documentation URL."""
         try:
@@ -181,15 +187,22 @@ class RecursiveOracleDocsScraper:
             # Add delay to be respectful to the server
             time.sleep(self.delay)
             
+            # Extract additional metadata
+            parsed_url = urlparse(url)
+            
             result = {
                 'url': url,
                 'title': title,
                 'text': text_content,
                 'word_count': len(text_content.split()),
+                'char_count': len(text_content),
                 'depth': depth,
                 'links_found': len(links),
                 'status': 'success',
-                'error': None
+                'error': None,
+                'domain': parsed_url.netloc,
+                'path': parsed_url.path,
+                'scraped_timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
             }
             
             return result, links
@@ -201,10 +214,14 @@ class RecursiveOracleDocsScraper:
                 'title': None,
                 'text': None,
                 'word_count': 0,
+                'char_count': 0,
                 'depth': depth,
                 'links_found': 0,
                 'status': 'error',
-                'error': str(e)
+                'error': str(e),
+                'domain': urlparse(url).netloc if url else None,
+                'path': urlparse(url).path if url else None,
+                'scraped_timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
             }
             return error_result, set()
         except Exception as e:
@@ -214,10 +231,14 @@ class RecursiveOracleDocsScraper:
                 'title': None,
                 'text': None,
                 'word_count': 0,
+                'char_count': 0,
                 'depth': depth,
                 'links_found': 0,
                 'status': 'error',
-                'error': str(e)
+                'error': str(e),
+                'domain': urlparse(url).netloc if url else None,
+                'path': urlparse(url).path if url else None,
+                'scraped_timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
             }
             return error_result, set()
     
@@ -285,8 +306,10 @@ class RecursiveOracleDocsScraper:
                     except Exception as e:
                         logger.error(f"Error processing {url}: {str(e)}")
             
+            # Progress update
             logger.info(f"Processed batch. Total scraped: {len(self.visited_urls)}, Queue size: {len(url_queue)}")
-
+        
+        # Print statistics
         self.print_statistics(links_by_depth)
         
         return self.scraped_data
@@ -306,6 +329,7 @@ class RecursiveOracleDocsScraper:
         print(f"Failed: {failed}")
         print(f"Total words extracted: {total_words:,}")
         
+        # Statistics by depth
         print(f"\nPages by depth:")
         depth_stats = defaultdict(int)
         for result in self.scraped_data:
@@ -315,6 +339,7 @@ class RecursiveOracleDocsScraper:
         for depth in sorted(depth_stats.keys()):
             print(f"  Depth {depth}: {depth_stats[depth]} pages")
         
+        # Top domains
         domain_stats = defaultdict(int)
         for result in self.scraped_data:
             if result['status'] == 'success':
@@ -341,36 +366,83 @@ class RecursiveOracleDocsScraper:
                 'pages': self.scraped_data
             }
             
-            with open(filename, 'w', encoding='utf-8') as f:
+            filepath = os.path.join(self.output_dir, filename)
+            with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(output_data, f, indent=2, ensure_ascii=False)
-            logger.info(f"Data saved to {filename}")
+            logger.info(f"Data saved to {filepath}")
         except Exception as e:
             logger.error(f"Error saving to JSON: {str(e)}")
     
     def save_to_csv(self, filename='oracle_docs_recursive.csv'):
         """Save scraped data to CSV file."""
         try:
-            with open(filename, 'w', newline='', encoding='utf-8') as f:
+            filepath = os.path.join(self.output_dir, filename)
+            with open(filepath, 'w', newline='', encoding='utf-8') as f:
                 fieldnames = ['url', 'title', 'text', 'word_count', 'depth', 'links_found', 'status', 'error']
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
-                writer.writerows(self.scraped_data)
-            logger.info(f"Data saved to {filename}")
+                for row in self.scraped_data:
+                    # Only include basic fields for compatibility
+                    basic_row = {k: v for k, v in row.items() if k in fieldnames}
+                    writer.writerow(basic_row)
+            logger.info(f"Data saved to {filepath}")
         except Exception as e:
             logger.error(f"Error saving to CSV: {str(e)}")
+    
+    def save_detailed_csv(self, filename='oracle_docs_detailed.csv'):
+        """Save scraped data to detailed CSV file with all metadata."""
+        try:
+            filepath = os.path.join(self.output_dir, filename)
+            with open(filepath, 'w', newline='', encoding='utf-8') as f:
+                if self.scraped_data:
+                    fieldnames = list(self.scraped_data[0].keys())
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(self.scraped_data)
+                else:
+                    # If no data, create empty CSV with expected headers
+                    fieldnames = ['url', 'title', 'text', 'word_count', 'char_count', 'depth', 
+                                'links_found', 'status', 'error', 'domain', 'path', 'scraped_timestamp']
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+            logger.info(f"Detailed data saved to {filepath}")
+        except Exception as e:
+            logger.error(f"Error saving detailed CSV: {str(e)}")
+    
+    def save_failed_csv(self, filename='oracle_docs_failed.csv'):
+        """Save failed URLs to CSV file."""
+        try:
+            filepath = os.path.join(self.output_dir, filename)
+            with open(filepath, 'w', newline='', encoding='utf-8') as f:
+                if self.failed_urls:
+                    fieldnames = list(self.failed_urls[0].keys())
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(self.failed_urls)
+                else:
+                    # If no failed URLs, create empty CSV with expected headers
+                    fieldnames = ['url', 'title', 'text', 'word_count', 'char_count', 'depth', 
+                                'links_found', 'status', 'error', 'domain', 'path', 'scraped_timestamp']
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+            logger.info(f"Failed URLs saved to {filepath}")
+        except Exception as e:
+            logger.error(f"Error saving failed CSV: {str(e)}")
     
     def save_text_files(self, folder='scraped_texts_recursive'):
         """Save each page's text content to individual text files."""
         try:
-            os.makedirs(folder, exist_ok=True)
+            folder_path = os.path.join(self.output_dir, folder)
+            os.makedirs(folder_path, exist_ok=True)
             
             for i, item in enumerate(self.scraped_data):
                 if item['status'] == 'success' and item['text']:
+                    # Create filename from URL
                     parsed_url = urlparse(item['url'])
                     filename = f"{i+1:03d}_depth{item['depth']}_{parsed_url.path.split('/')[-1].replace('.htm', '')}.txt"
                     filename = re.sub(r'[^\w\-_.]', '_', filename)
                     
-                    filepath = os.path.join(folder, filename)
+                    filepath = os.path.join(folder_path, filename)
                     
                     with open(filepath, 'w', encoding='utf-8') as f:
                         f.write(f"URL: {item['url']}\n")
@@ -380,8 +452,8 @@ class RecursiveOracleDocsScraper:
                         f.write(f"Links Found: {item['links_found']}\n")
                         f.write("-" * 50 + "\n\n")
                         f.write(item['text'])
-                    
-                    logger.info(f"Saved text to {filepath}")
+            
+            logger.info(f"Text files saved to {folder_path}")
             
         except Exception as e:
             logger.error(f"Error saving text files: {str(e)}")
@@ -389,7 +461,8 @@ class RecursiveOracleDocsScraper:
     def save_failed_urls(self, filename='failed_urls.txt'):
         """Save failed URLs to a text file."""
         try:
-            with open(filename, 'w', encoding='utf-8') as f:
+            filepath = os.path.join(self.output_dir, filename)
+            with open(filepath, 'w', encoding='utf-8') as f:
                 f.write("Failed URLs and Errors:\n")
                 f.write("=" * 50 + "\n\n")
                 for item in self.failed_urls:
@@ -397,7 +470,7 @@ class RecursiveOracleDocsScraper:
                     f.write(f"Error: {item['error']}\n")
                     f.write(f"Depth: {item['depth']}\n")
                     f.write("-" * 30 + "\n\n")
-            logger.info(f"Failed URLs saved to {filename}")
+            logger.info(f"Failed URLs saved to {filepath}")
         except Exception as e:
             logger.error(f"Error saving failed URLs: {str(e)}")
 
@@ -446,10 +519,10 @@ def main():
     
     # Initialize recursive scraper
     scraper = RecursiveOracleDocsScraper(
-        delay=1,           
-        max_workers=3,     
-        max_depth=2,
-        max_pages=200
+        delay=1,           # 1 second delay between requests
+        max_workers=3,     # 3 concurrent workers
+        max_depth=2,       # Go 2 levels deep
+        max_pages=200      # Maximum 200 pages total
     )
     
     print(f"Starting recursive scraping with {len(start_urls)} seed URLs...")
@@ -460,19 +533,26 @@ def main():
     # Start recursive scraping
     results = scraper.scrape_recursive(start_urls)
     
-    
+    # Save results in multiple formats
     scraper.save_to_json()
-    scraper.save_to_csv()                    
-    scraper.save_detailed_csv()              
-    scraper.save_failed_csv()                
+    scraper.save_to_csv()                    # Basic CSV with metadata + text
+    scraper.save_detailed_csv()              # Enhanced CSV with extra metadata
+    scraper.save_failed_csv()                # Failed URLs in CSV format
     scraper.save_text_files()
     scraper.save_failed_urls()
     
     print(f"\nAll files saved successfully!")
-    print(f"CSV files created:")
-    print(f"  - oracle_docs_recursive.csv (basic format)")
-    print(f"  - oracle_docs_detailed.csv (enhanced metadata)")
-    print(f"  - oracle_docs_failed.csv (failed URLs)")
+    print(f"Output directory: {os.path.abspath(scraper.output_dir)}")
+    print(f"\nFiles created:")
+    print(f"  📊 CSV Files:")
+    print(f"    - oracle_docs_recursive.csv (basic format)")
+    print(f"    - oracle_docs_detailed.csv (enhanced metadata)")
+    print(f"    - oracle_docs_failed.csv (failed URLs)")
+    print(f"  📄 JSON File:")
+    print(f"    - oracle_docs_recursive.json (complete data)")
+    print(f"  📁 Text Files:")
+    print(f"    - scraped_texts_recursive/ (individual page files)")
+    print(f"    - failed_urls.txt (failed URL details)")
 
 if __name__ == "__main__":
     main()
