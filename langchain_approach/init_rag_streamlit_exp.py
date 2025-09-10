@@ -46,7 +46,7 @@ from oci_llm import OCIGenAILLM
 
 
 # config for the RAG
-from config_rag import (
+from langchain_approach.config_rag import (
     CHUNK_SIZE,
     CHUNK_OVERLAP,
     VECTOR_STORE_NAME,
@@ -284,7 +284,7 @@ def initialize_rag_chain():
     # Initialize RAG
 
     # 1. Load the csv and format as documents
-    detailed = pd.read_csv('pdfFiles/preprocessed.csv')
+    detailed = pd.read_csv('pdfFiles/oracle_docs_preprocessed.csv')
     todrop = ['text_processed', 'text_no_stopwords', 'text_stemmed', 'text_lemmatized', 'status', 'scraped_timestamp']
     detailed.drop(columns=todrop, axis=1, inplace=True)
     detailed = detailed.dropna().astype(str)

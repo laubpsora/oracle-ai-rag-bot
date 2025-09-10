@@ -4,8 +4,6 @@
 
 This project implements a Retrieval-Augmented Generation (RAG) based chatbot designed to assist the Oracle CSS team. It leverages both public and internal Oracle technology documentation, providing intelligent and context-aware responses to user queries.
 
----
-
 ## Architecture
 
 **1. Data Preprocessing**  
@@ -20,8 +18,6 @@ This project implements a Retrieval-Augmented Generation (RAG) based chatbot des
 - Embeddings are stored in Oracle Database 23ai for efficient retrieval.
 - Responses are generated using a Large Language Model (LLM).
 - The user interface is implemented with Streamlit for rapid prototyping and iteration.
-
----
 
 ## Getting Started
 

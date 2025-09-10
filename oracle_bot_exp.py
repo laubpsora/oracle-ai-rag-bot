@@ -1,7 +1,7 @@
 import streamlit as st
 import traceback
 import sys
-from init_rag_streamlit_exp import initialize_rag_chain, get_answer
+from langchain_approach.init_rag_streamlit_exp import initialize_rag_chain, get_answer
 from streamlit_feedback import streamlit_feedback
 
 def process_feedback(feedback_value):
